@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>羊膜卵生存挑战 - 完全版</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .scene {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e4e8;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+        }
+
+        h1 {
+            text-align: center;
+            color: #e74c3c;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+        }
+
+        .choices {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .choice {
+            display: block;
+            background: #3498db;
+            color: white;
+            padding: 12px 20px;
+            margin: 12px 0;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .choice:hover {
+            background: #2980b9;
+            transform: translateX(5px);
+        }
+
+        .outcome {
+            background: #fff9e6;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f1c40f;
+            margin: 20px 0;
+        }
+
+        .success {
+            background: #e8f7f0;
+            border-color: #2ecc71;
+        }
+
+        .failure {
+            background: #fdeded;
+            border-color: #e74c3c;
+        }
+
+        .knowledge {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #9b59b6;
+            margin: 25px 0;
+        }
+
+        .restart {
+            display: inline-block;
+            background: #9b59b6;
+            color: white;
+            padding: 12px 25px;
+            margin-top: 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .scene-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: block;
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 8px 15px;
+            margin-top: 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .selected {
+            background: #2ecc71;
+        }
+
+        .next-btn {
+            display: none;
+            background: #9b59b6;
+            color: white;
+            padding: 12px 25px;
+            margin-top: 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .answer-btn {
+            background: #f39c12;
+            color: white;
+            padding: 12px 25px;
+            margin: 10px 10px 10px 0;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .continue-btn {
+            background: #3498db;
+            color: white;
+            padding: 12px 25px;
+            margin: 10px 10px 10px 0;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            display: none;
+        }
+
+        .answer-content {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .crisis {
+            background: #fdeded;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e74c3c;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-container">
+        <h1>🐣 羊膜卵生存挑战 🥚</h1>
+
+        <!-- 游戏场景将通过JavaScript动态加载到这里 -->
+    </div>
+
+    <script>
+        // 游戏状态数据
+        const gameState = {
+            currentScene: "start",
+            selectedChoices: [],
+            sceneAnswers: {
+                1: [1, 2], // 场景1正确答案：选项1和2
+                2: [1, 2], // 场景2正确答案：选项1和2
+                3: [1],    // 场景3正确答案：选项1
+                4: [1, 2], // 场景4正确答案：选项1和2
+                5: [1]     // 场景5正确答案：选项1
+            },
+            answerDisplayed: false, // 标记答案是否已显示
+        };
+
+        // 危机提示信息
+        const crisisMessages = {
+            1: "⚠️ 缺水危机：胚胎因水分流失过多，面临干涸死亡的危险！",
+            2: "⚠️ 缺氧危机：胚胎无法获得足够氧气，发育受到严重影响！",
+            3: "⚠️ 营养危机：胚胎缺乏必要营养，生长发育停滞！",
+            4: "⚠️ 废物堆积危机：代谢废物无法排出，毒害胚胎！",
+            5: "⚠️ 破壳危机：胚胎无法破壳而出，将窒息死亡！"
+        };
+
+        // 生物学原理解释
+        const biologyKnowledge = {
+            1: `
+                <h3>生物学原理</h3>
+                <p>羊膜围成的羊膜腔在防止胚胎失水方面起到关键作用。羊膜腔内充满的羊水为胚胎提供了一个稳定的水环境，防止胚胎干燥；而卵壳则有效地减少了水分的蒸发，保护胚胎免受干旱环境的威胁。</p>
+            `,
+            2: `
+                <h3>生物学原理</h3>
+                <p>卵壳上的小孔和尿囊血管紧贴卵壳是羊膜卵进行气体交换的重要方式。卵壳上的微孔允许氧气进入卵内，同时排出二氧化碳；而尿囊则发育出丰富的毛细血管网，紧贴卵壳内侧，极大地增加了气体交换的表面积，确保胚胎能够获得足够的氧气。</p>
+            `,
+            3: `
+                <h3>生物学原理</h3>
+                <p>卵黄囊是羊膜卵中重要的营养储备结构。卵黄囊内含有丰富的卵黄，为胚胎发育提供了所需的蛋白质、脂肪和糖类等营养物质。随着胚胎的发育，卵黄逐渐被消耗，为胚胎的生长和器官形成提供了物质基础。</p>
+            `,
+            4: `
+                <h3>生物学原理</h3>
+                <p>尿囊在羊膜卵的废物处理中起到重要作用。尿囊不仅是气体交换的场所，还负责收集和储存胚胎代谢产生的含氮废物。胚胎将含氮废物转化为尿酸，尿酸是一种相对不溶的物质，以结晶形式沉积在尿囊中，从而减少了废物对胚胎的毒性。</p>
+            `,
+            5: `
+                <h3>生物学原理</h3>
+                <p>一些动物的胚胎会发育出破壳齿来帮助破壳。破壳齿是胚胎在孵化前临时发育的特殊结构，位于上颚或喙部，用于啄破或刮开卵壳。孵化后，破壳齿通常会脱落或被吸收。</p>
+            `
+        };
+
+        // 游戏场景定义
+        const scenes = {
+            start: {
+                title: "羊膜卵生存挑战",
+                content: `
+                    <div class="scene">
+                        <p>你是一个刚进化出羊膜结构的远古胚胎，必须用智慧在陆地上存活！在接下来的挑战中，你将面临干旱、缺氧、营养危机等问题。只有做出正确的选择，才能完成进化！</p>
+                        <div class="choices">
+                            <a class="choice" onclick="loadScene('scene1')">开始冒险</a>
+                        </div>
+                        <div class="knowledge">
+                            <h3>知识背景</h3>
+                            <p>羊膜卵是脊椎动物征服陆地的关键进化突破，包含五大结构：</p>
+                            <ul>
+                                <li><strong>卵壳</strong> - 物理保护、防止水分蒸发和气体交换</li>
+                                <li><strong>羊膜</strong> - 创造胚胎的"私人水环境"</li>
+                                <li><strong>尿囊</strong> - 呼吸和废物处理中心</li>
+                                <li><strong>卵黄囊</strong> - 营养储备库</li>
+                                <li><strong>绒毛膜</strong> - 外层保护膜</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+
+            scene1: {
+                title: "干旱的环境 - 胚胎面临失水危机",
+                content: `
+                    <div class="scene">
+                        <h2>🌵 场景：干旱环境</h2>
+                        <p>环境极度干旱，胚胎面临失水危机！</p>
+
+                        <div class="choices">
+                            <p>▶ 请选择应对策略（<strong>多选</strong>）：</p>
+                            <a class="choice" onclick="selectChoice(1, 1)">A. 羊膜围成羊膜腔，内充满羊水，提供胚胎水环境</a>
+                            <a class="choice" onclick="selectChoice(1, 2)">B. 形成卵壳，防止水分散失</a>
+                            <a class="choice" onclick="selectChoice(1, 3)">C. 卵黄囊破裂释放水分</a>
+                        </div>
+                        
+                        <a class="next-btn" onclick="validateChoices(1)">继续前进</a>
+                        <a class="back-btn" onclick="loadScene('start')">返回</a>
+                    </div>
+                `
+            },
+
+            scene1_outcome_success: {
+                title: "策略生效",
+                content: `
+                    <div class="scene">
+                        <div class="outcome success">
+                            <h3>💡 策略生效！</h3>
+                            <p>成功应对失水危机，胚胎暂时安全。</p>
+                        </div>
+
+                        <div class="knowledge">
+                            ${biologyKnowledge[1]}
+                        </div>
+
+                        <div class="choices">
+                            <a class="choice" onclick="loadScene('scene2')">继续前进</a>
+                        </div>
+                        <a class="back-btn" onclick="loadScene('scene1')">返回</a>
+                    </div>
+                `
+            },
+
+            scene1_outcome_failure: {
+                title: "应对失败",
+                content: `
+                    <div class="scene">
+                        <div class="crisis">
+                            ${crisisMessages[1]}
+                        </div>
+                        <div class="outcome failure">
+                            <h3>⚠️ 应对失败！</h3>
+                            <p>你的选择未能有效解决失水问题，胚胎仍面临危险。</p>
+                        </div>
+
+                        <div class="choices">
+                            <a class="answer-btn" onclick="showAnswer(1)">查看答案</a>
+                            <a class="back-btn" onclick="loadScene('scene1')">返回重做</a>
+                            <a class="continue-btn" onclick="loadScene('scene2')">继续前行</a>
+                        </div>
+                        
+                        <div id="answer-content-1" class="answer-content">
+                            <h4>正确答案：A和B</h4>
+                            <p>A. 羊膜围成羊膜腔，内充满羊水，提供胚胎水环境</p>
+                            <p>B. 形成卵壳，防止水分散失</p>
+                            ${biologyKnowledge[1]}
+                        </div>
+                    </div>
+                `
+            },
+
+            scene2: {
+                title: "气体危机",
+                content: `
+                    <div class="scene">
+                        <h2>🌬️ 场景：气体危机</h2>
+                        <p>胚胎被卵壳围住，面临气体交换困难的问题！</p>
+
+                        <div class="choices">
+                            <p>▶ 请选择应对策略（<strong>多选</strong>）：</p>
+                            <a class="choice" onclick="selectChoice(2, 1)">A. 卵壳上有小孔，利于气体交换</a>
+                            <a class="choice" onclick="selectChoice(2, 2)">B. 尿囊血管紧贴卵壳，高效进行气体交换</a>
+                            <a class="choice" onclick="selectChoice(2, 3)">C. 羊膜收缩挤压气体</a>
+                        </div>
+                        
+                        <a class="next-btn" onclick="validateChoices(2)">继续前进</a>
+                        <a class="back-btn" onclick="loadScene('scene1')">返回</a>
+                    </div>
+                `
+            },
+
+            scene2_outcome_success: {
+                title: "气体交换成功",
+                content: `
+                    <div class="scene">
+                        <div class="outcome success">
+                            <h3>💨 气体交换成功！</h3>
+                            <p>成功解决气体交换问题，胚胎获得足够氧气。</p>
+                        </div>
+
+                        <div class="knowledge">
+                            ${biologyKnowledge[2]}
+                        </div>
+
+                        <div class="choices">
+                            <a class="choice" onclick="loadScene('scene3')">继续前进</a>
+                        </div>
+                        <a class="back-btn" onclick="loadScene('scene2')">返回</a>
+                    </div>
+                `
+            },
+
+            scene2_outcome_failure: {
+                title: "气体交换失败",
+                content: `
+                    <div class="scene">
+                        <div class="crisis">
+                            ${crisisMessages[2]}
+                        </div>
+                        <div class="outcome failure">
+                            <h3>⚠️ 气体交换失败！</h3>
+                            <p>你的选择未能有效解决气体交换问题，胚胎仍面临危险。</p>
+                        </div>
+
+                        <div class="choices">
+                            <a class="answer-btn" onclick="showAnswer(2)">查看答案</a>
+                            <a class="back-btn" onclick="loadScene('scene2')">返回重做</a>
+                            <a class="continue-btn" onclick="loadScene('scene3')">继续前行</a>
+                        </div>
+                        
+                        <div id="answer-content-2" class="answer-content">
+                            <h4>正确答案：A和B</h4>
+                            <p>A. 卵壳上有小孔，利于气体交换</p>
+                            <p>B. 尿囊血管紧贴卵壳，高效进行气体交换</p>
+                            ${biologyKnowledge[2]}
+                        </div>
+                    </div>
+                `
+            },
+
+            scene3: {
+                title: "营养危机",
+                content: `
+                    <div class="scene">
+                        <h2>🍱 场景：营养危机</h2>
+                        <p>胚胎发育需要大量营养，面临营养不足的危机！</p>
+
+                        <div class="choices">
+                            <p>▶ 请选择应对策略（<strong>单选</strong>）：</p>
+                            <a class="choice" onclick="selectChoice(3, 1)">A. 卵黄囊提供丰富的营养物质</a>
+                            <a class="choice" onclick="selectChoice(3, 2)">B. 尿囊吸收外界营养</a>
+                            <a class="choice" onclick="selectChoice(3, 3)">C. 羊膜分泌营养物质</a>
+                        </div>
+                        
+                        <a class="next-btn" onclick="validateChoices(3)">继续前进</a>
+                        <a class="back-btn" onclick="loadScene('scene2')">返回</a>
+                    </div>
+                `
+            },
+
+            scene3_outcome_success: {
+                title: "营养补充成功",
+                content: `
+                    <div class="scene">
+                        <div class="outcome success">
+                            <h3>🍽️ 营养补充成功！</h3>
+                            <p>胚胎获得足够营养，继续发育。</p>
+                        </div>
+
+                        <div class="knowledge">
+                            ${biologyKnowledge[3]}
+                        </div>
+
+                        <div class="choices">
+                            <a class="choice" onclick="loadScene('scene4')">继续前进</a>
+                        </div>
+                        <a class="back-btn" onclick="loadScene('scene3')">返回</a>
+                    </div>
+                `
+            },
+
+            scene3_outcome_failure: {
+                title: "营养补充失败",
+                content: `
+                    <div class="scene">
+                        <div class="crisis">
+                            ${crisisMessages[3]}
+                        </div>
+                        <div class="outcome failure">
+                            <h3>⚠️ 营养补充失败！</h3>
+                            <p>你的选择未能有效解决营养问题，胚胎仍面临危险。</p>
+                        </div>
+
+                        <div class="choices">
+                            <a class="answer-btn" onclick="showAnswer(3)">查看答案</a>
+                            <a class="back-btn" onclick="loadScene('scene3')">返回重做</a>
+                            <a class="continue-btn" onclick="loadScene('scene4')">继续前行</a>
+                        </div>
+                        
+                        <div id="answer-content-3" class="answer-content">
+                            <h4>正确答案：A</h4>
+                            <p>A. 卵黄囊提供丰富的营养物质</p>
+                            ${biologyKnowledge[3]}
+                        </div>
+                    </div>
+                `
+            },
+
+            scene4: {
+                title: "废物堆积",
+                content: `
+                    <div class="scene">
+                        <h2>🗑️ 场景：废物堆积</h2>
+                        <p>胚胎代谢产生的废物堆积，影响正常发育！</p>
+
+                        <div class="choices">
+                            <p>▶ 请选择应对策略（<strong>多选</strong>）：</p>
+                            <a class="choice" onclick="selectChoice(4, 1)">A. 尿囊紧贴蛋壳内膜，富含血管，利于废物排出</a>
+                            <a class="choice" onclick="selectChoice(4, 2)">B. 将废物转化为尿酸储存</a>
+                            <a class="choice" onclick="selectChoice(4, 3)">C. 羊膜包裹废物排出</a>
+                        </div>
+                        
+                        <a class="next-btn" onclick="validateChoices(4)">继续前进</a>
+                        <a class="back-btn" onclick="loadScene('scene3')">返回</a>
+                    </div>
+                `
+            },
+
+            scene4_outcome_success: {
+                title: "废物处理成功",
+                content: `
+                    <div class="scene">
+                        <div class="outcome success">
+                            <h3>🗑️ 废物处理成功！</h3>
+                            <p>成功解决废物堆积问题，胚胎继续健康发育。</p>
+                        </div>
+
+                        <div class="knowledge">
+                            ${biologyKnowledge[4]}
+                        </div>
+
+                        <div class="choices">
+                            <a class="choice" onclick="loadScene('scene5')">继续前进</a>
+                        </div>
+                        <a class="back-btn" onclick="loadScene('scene4')">返回</a>
+                    </div>
+                `
+            },
+
+            scene4_outcome_failure: {
+                title: "废物处理失败",
+                content: `
+                    <div class="scene">
+                        <div class="crisis">
+                            ${crisisMessages[4]}
+                        </div>
+                        <div class="outcome failure">
+                            <h3>⚠️ 废物处理失败！</h3>
+                            <p>你的选择未能有效解决废物处理问题，胚胎仍面临危险。</p>
+                        </div>
+
+                        <div class="choices">
+                            <a class="answer-btn" onclick="showAnswer(4)">查看答案</a>
+                            <a class="back-btn" onclick="loadScene('scene4')">返回重做</a>
+                            <a class="continue-btn" onclick="loadScene('scene5')">继续前行</a>
+                        </div>
+                        
+                        <div id="answer-content-4" class="answer-content">
+                            <h4>正确答案：A和B</h4>
+                            <p>A. 尿囊紧贴蛋壳内膜，富含血管，利于废物排出</p>
+                            <p>B. 将废物转化为尿酸储存</p>
+                            ${biologyKnowledge[4]}
+                        </div>
+                    </div>
+                `
+            },
+
+            scene5: {
+                title: "终极挑战",
+                content: `
+                    <div class="scene">
+                        <h2>🏆 场景：终极挑战</h2>
+                        <p>胚胎面临最后一个挑战，能否成功破壳而出？</p>
+
+                        <div class="choices">
+                            <p>▶ 请选择应对策略（<strong>单选</strong>）：</p>
+                            <a class="choice" onclick="selectChoice(5, 1)">A. 胚胎发育出破壳齿，啄破卵壳</a>
+                            <a class="choice" onclick="selectChoice(5, 2)">B. 卵壳自动溶解</a>
+                            <a class="choice" onclick="selectChoice(5, 3)">C. 羊膜膨胀挤破卵壳</a>
+                        </div>
+                        
+                        <a class="next-btn" onclick="validateChoices(5)">继续前进</a>
+                        <a class="back-btn" onclick="loadScene('scene4')">返回</a>
+                    </div>
+                `
+            },
+
+            scene5_outcome_failure: {
+                title: "终极挑战失败",
+                content: `
+                    <div class="scene">
+                        <div class="crisis">
+                            ${crisisMessages[5]}
+                        </div>
+                        <div class="outcome failure">
+                            <h3>⚠️ 终极挑战失败！</h3>
+                            <p>你的选择未能成功破壳，胚胎无法存活。</p>
+                        </div>
+
+                        <div class="choices">
+                            <a class="answer-btn" onclick="showAnswer(5)">查看答案</a>
+                            <a class="back-btn" onclick="loadScene('scene5')">返回重做</a>
+                            <a class="continue-btn" onclick="loadScene('failure')">结束游戏</a>
+                        </div>
+                        
+                        <div id="answer-content-5" class="answer-content">
+                            <h4>正确答案：A</h4>
+                            <p>A. 胚胎发育出破壳齿，啄破卵壳</p>
+                            ${biologyKnowledge[5]}
+                        </div>
+                    </div>
+                `
+            },
+
+            victory: {
+                title: "进化胜利！",
+                content: `
+                    <div class="scene">
+                        <div class="outcome success" style="text-align:center;">
+                            <h2>🎉 进化胜利！</h2>
+                            <p>你成功度过所有危机，破壳成为第一只羊膜卵动物！</p>
+                            <p>羊膜卵结构已永久写入你的基因</p>
+                        </div>
+
+                        <div class="knowledge">
+                            <h3>◆ 羊膜卵核心知识点总结 ◆</h3>
+                            <ul>
+                                <li><strong>卵壳</strong>：物理防护、防止水分蒸发和气体交换通道</li>
+                                <li><strong>尿囊</strong>：呼吸器官+废物储存室</li>
+                                <li><strong>羊膜</strong>：私有水环境（胚胎的"私人泳池"）</li>
+                                <li><strong>卵黄囊</strong>：能量银行（营养储备）</li>
+                                <li><strong>绒毛膜</strong>：外层保护膜</li>
+                            </ul>
+                            <p>💡 进化意义：羊膜卵在脊椎动物演化史上的意义：</p>
+                            <ol>
+                                <li>体内受精，受精不必借助水作为介质。</li>
+                                <li>羊膜卵可以产在陆地上，并在陆地上孵化。</li>
+                                <li>胚胎悬浮在羊水中，使胚胎在自身的水域中发育，环境更稳定，既避免了陆地干燥的威胁，又可减少震动，防止机械损伤。</li>
+                            </ol>
+                        </div>
+
+                        <div style="text-align:center; margin-top:30px;">
+                            <a class="restart" onclick="resetGame()">重新开始游戏</a>
+                        </div>
+                    </div>
+                `
+            },
+
+            failure: {
+                title: "进化失败",
+                content: `
+                    <div class="scene">
+                        <div class="outcome failure" style="text-align:center;">
+                            <h2>💔 进化失败...</h2>
+                            <p>你的羊膜卵结构未能适应陆地环境</p>
+                        </div>
+
+                        <div class="knowledge">
+                            <h3>🔍 失败原因分析：</h3>
+                            <p>羊膜卵必须同时解决以下问题才能陆地生存：</p>
+                            <ol>
+                                <li>防止脱水（羊膜+卵壳）</li>
+                                <li>气体交换（尿囊+卵壳气孔）</li>
+                                <li>废物处理（尿酸结晶）</li>
+                                <li>营养供应（卵黄囊）</li>
+                                <li>物理防护（钙质卵壳）</li>
+                            </ol>
+                        </div>
+
+                        <div style="text-align:center; margin-top:30px;">
+                            <a class="restart" onclick="resetGame()">重新进化</a>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        // 加载场景函数
+        function loadScene(sceneId) {
+            gameState.currentScene = sceneId;
+            gameState.selectedChoices = []; // 重置已选选项
+            gameState.answerDisplayed = false; // 重置答案显示状态
+            document.getElementById("game-container").innerHTML = `
+                <h1>🐣 羊膜卵生存挑战 🥚</h1>
+                ${scenes[sceneId].content}
+            `;
+
+            // 更新页面标题
+            document.title = scenes[sceneId].title + " - 羊膜卵生存挑战";
+        }
+
+        // 选择选项
+        function selectChoice(sceneNumber, choice) {
+            const isMultiChoice = [1, 2, 4].includes(sceneNumber); // 场景1、2、4允许多选
+            
+            // 获取所有选项元素
+            const choices = document.querySelectorAll('.choices .choice');
+            
+            if (isMultiChoice) {
+                // 多选场景：切换选中状态
+                const choiceIndex = gameState.selectedChoices.findIndex(c => c === choice);
+                if (choiceIndex !== -1) {
+                    gameState.selectedChoices.splice(choiceIndex, 1);
+                    choices[choice - 1].classList.remove('selected');
+                } else {
+                    gameState.selectedChoices.push(choice);
+                    choices[choice - 1].classList.add('selected');
+                }
+            } else {
+                // 单选场景：只能选一个
+                gameState.selectedChoices = [choice];
+                
+                // 更新UI显示
+                choices.forEach((c, index) => {
+                    if (index === choice - 1) {
+                        c.classList.add('selected');
+                    } else {
+                        c.classList.remove('selected');
+                    }
+                });
+            }
+            
+            // 无论单选多选，只要有选择就显示下一步按钮
+            document.querySelector('.next-btn').style.display = 'inline-block';
+        }
+
+        // 验证选项
+        function validateChoices(sceneNumber) {
+            const correctAnswers = gameState.sceneAnswers[sceneNumber];
+            let isCorrect = true;
+            
+            // 检查是否选择了所有正确答案且没有选择错误答案
+            if (gameState.selectedChoices.length !== correctAnswers.length) {
+                isCorrect = false;
+            } else {
+                for (const choice of gameState.selectedChoices) {
+                    if (!correctAnswers.includes(choice)) {
+                        isCorrect = false;
+                        break;
+                    }
+                }
+            }
+            
+            // 根据选择结果显示相应场景
+            if (isCorrect) {
+                if (sceneNumber === 5) {
+                    loadScene('victory');
+                } else {
+                    loadScene(`scene${sceneNumber}_outcome_success`);
+                }
+            } else {
+                if (sceneNumber === 5) {
+                    loadScene('scene5_outcome_failure');
+                } else {
+                    loadScene(`scene${sceneNumber}_outcome_failure`);
+                }
+            }
+        }
+
+        // 显示答案
+        function showAnswer(sceneNumber) {
+            // 显示答案内容
+            const answerContent = document.getElementById(`answer-content-${sceneNumber}`);
+            if (answerContent) {
+                answerContent.style.display = 'block';
+            }
+            
+            // 显示继续前行按钮
+            const continueBtn = document.querySelector('.continue-btn');
+            if (continueBtn) {
+                continueBtn.style.display = 'inline-block';
+            }
+            
+            // 隐藏查看答案按钮
+            const answerBtn = document.querySelector('.answer-btn');
+            if (answerBtn) {
+                answerBtn.style.display = 'none';
+            }
+            
+            // 标记答案已显示
+            gameState.answerDisplayed = true;
+        }
+
+        // 重置游戏
+        function resetGame() {
+            gameState.currentScene = "start";
+            gameState.selectedChoices = [];
+            loadScene("start");
+        }
+
+        // 初始化游戏
+        loadScene("start");
+    </script>
+</body>
+
+</html>    
